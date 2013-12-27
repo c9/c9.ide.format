@@ -56,7 +56,9 @@ define(function(require, exports, module) {
             
             prefs.add({
                 "Formatters" : {
+                    position : 450,
                     "JS Beautify" : {
+                        position : 100,
                         "Preserve Empty Lines": {
                             type     : "checkbox",
                             path     : "user/format/jsbeautify/@preserveempty",

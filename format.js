@@ -56,7 +56,7 @@ define(function(require, exports, module) {
             
             mnuFormat = menus.get("Tools/Format Selection").menu;
             mnuFormat.on("itemclick", function(e){
-                if (e.value)
+                if (e.value && e.value != "auto")
                     formatCode(e.value)
             });
         }

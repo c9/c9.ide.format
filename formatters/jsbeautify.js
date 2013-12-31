@@ -1,14 +1,12 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "Plugin", "ui", "menus", "format", "settings", "preferences"
+        "Plugin", "format", "settings", "preferences"
     ];
     main.provides = ["format.jsbeautify"];
     return main;
 
     function main(options, imports, register) {
         var Plugin   = imports.Plugin;
-        var ui       = imports.ui;
-        var menus    = imports.menus;
         var format   = imports.format;
         var settings = imports.settings;
         var prefs    = imports.preferences;
@@ -141,7 +139,7 @@ define(function(require, exports, module) {
             var value  = session.getTextRange(range);
             var type   = null;
     
-            if (mode == "javascript") {
+            if (mode == "javascript" || mode == "json") {
                 type = "js";
             } else if (mode == "css"){
                 type = "css";

@@ -191,7 +191,7 @@ define(function(require, exports, module) {
         /***** Register and define API *****/
         
         /**
-         * Beautify extension for the Cloud9 IDE client
+         * Beautify extension for the Cloud9 client
          *
          * Reformats the selected code in the current document
          * Processing/formatting code from https://github.com/einars/js-beautify

@@ -44,20 +44,19 @@ define(function(require, exports, module) {
                 }
             }, plugin);
             
-            menus.addItemByPath("Tools/Format Selection", new ui.item(), 1000, plugin);
-            menus.addItemByPath("Tools/~", new ui.divider(), 1100, plugin);
+            menus.addItemByPath("Edit/Code Formatting", new ui.item(), 1400, plugin);
             
-            menus.addItemByPath("Tools/Format Selection/Auto Selected Formatter", new ui.item({
+            menus.addItemByPath("Edit/Code Formatting/Auto Selected Formatter", new ui.item({
                 selected : true,
                 value    : "auto",
                 command  : "formatcode"
             }), 100, plugin);
-            menus.addItemByPath("Tools/Format Selection/~", new ui.divider(), 200, plugin);
+            menus.addItemByPath("Edit/Code Formatting/~", new ui.divider(), 200, plugin);
             
-            mnuFormat = menus.get("Tools/Format Selection").menu;
+            mnuFormat = menus.get("Edit/Code Formatting").menu;
             mnuFormat.on("itemclick", function(e){
                 if (e.value && e.value != "auto")
-                    formatCode(e.value)
+                    formatCode(e.value);
             });
         }
         
@@ -82,7 +81,7 @@ define(function(require, exports, module) {
         }
         
         function addFormatter(caption, mode, plugin){
-            menus.addItemByPath("Tools/Format Selection/" + caption, new ui.item({
+            menus.addItemByPath("Edit/Code Formatting/" + caption, new ui.item({
                 value       : mode,
                 isAvailable : commands.commands.formatcode.isAvailable
             }), count += 100, plugin);

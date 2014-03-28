@@ -44,7 +44,7 @@ define(function(require, exports, module) {
                 }
             }, plugin);
             
-            menus.addItemByPath("Edit/Code Formatting", new ui.item(), 1400, plugin);
+            menus.addItemByPath("Edit/Code Formatting", null, 1400, plugin);
             
             menus.addItemByPath("Edit/Code Formatting/Auto Selected Formatter", new ui.item({
                 selected : true,

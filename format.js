@@ -31,14 +31,6 @@ define(function(require, exports, module) {
                 hint    : "reformat selected JavaScript code in the editor",
                 msg     : "Beautifying selection.",
                 bindKey : { mac: "Command-Shift-B", win: "Ctrl-Shift-B" },
-                isAvailable : function(editor){
-                    if (editor && editor.type == "ace") {
-                        var range = editor.ace.getSelectionRange();
-                        return range.start.row != range.end.row
-                          || range.start.column != range.end.column;
-                    }
-                    return false;
-                },
                 exec : function(editor, args) {
                     formatCode(args.mode, editor);
                 }
@@ -72,6 +64,12 @@ define(function(require, exports, module) {
             
             if (!mode || mode == "auto")
                 mode = getMode(editor);
+            
+            var range = editor.ace.selection.getRange();
+            if (range.start.row === range.end.row
+                && range.start.column === range.end.column) {
+                editor.ace.selection.selectAll();
+            }
             
             if (!emit("format", { mode: mode, editor: editor })) {
                 alert("Error",

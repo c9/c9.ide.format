@@ -6,18 +6,18 @@ define(function(require, exports, module) {
     return main;
 
     function main(options, imports, register) {
-        var Plugin   = imports.Plugin;
-        var format   = imports.format;
+        var Plugin = imports.Plugin;
+        var format = imports.format;
         var settings = imports.settings;
-        var prefs    = imports.preferences;
+        var prefs = imports.preferences;
         
-        var Range      = require("ace/range").Range;
+        var Range = require("ace/range").Range;
         var jsbeautify = require("./lib_jsbeautify");
         
         /***** Initialization *****/
         
         var plugin = new Plugin("Ajax.org", main.consumes);
-        // var emit   = plugin.getEmitter();
+        // var emit = plugin.getEmitter();
         
         var MODES = {
             "javascript" : "Javascript (JS Beautify)",
@@ -32,7 +32,7 @@ define(function(require, exports, module) {
             if (loaded) return false;
             loaded = true;
             
-            Object.keys(MODES).forEach(function(name){
+            Object.keys(MODES).forEach(function(name) {
                 format.addFormatter(MODES[name], name, plugin);
             })
             
@@ -47,51 +47,51 @@ define(function(require, exports, module) {
                 ]);
             });
             
-            format.on("format", function(e){
+            format.on("format", function(e) {
                 if (MODES[e.mode])
                     return formatCode(e.editor, e.mode);
             });
             
             prefs.add({
                 "Formatters" : {
-                    position : 450,
+                    position: 450,
                     "JS Beautify" : {
-                        position : 100,
+                        position: 100,
                         "Preserve Empty Lines": {
-                            type     : "checkbox",
-                            path     : "user/format/jsbeautify/@preserveempty",
-                            position : 1000
+                            type: "checkbox",
+                            path: "user/format/jsbeautify/@preserveempty",
+                            position: 1000
                         },
                         "Keep Array Indentation": {
-                            type     : "checkbox",
-                            path     : "user/format/jsbeautify/@keeparrayindentation",
-                            position : 2000
+                            type: "checkbox",
+                            path: "user/format/jsbeautify/@keeparrayindentation",
+                            position: 2000
                         },
                         "JSLint Strict Whitespace": {
-                            type     : "checkbox",
-                            path     : "user/format/jsbeautify/@jslinthappy",
-                            position : 3000
+                            type: "checkbox",
+                            path: "user/format/jsbeautify/@jslinthappy",
+                            position: 3000
                         },
                         "Braces": {
-                            type     : "dropdown",
-                            path     : "user/format/jsbeautify/@braces",
-                            width    : "185",
-                            position : 4000,
-                            items    : [
+                            type: "dropdown",
+                            path: "user/format/jsbeautify/@braces",
+                            width: "185",
+                            position: 4000,
+                            items: [
                                 { value: "collapse", caption: "Braces with control statement" },
                                 { value: "expand", caption: "Braces on own line" },
                                 { value: "end-expand", caption: "End braces on own line" }
                             ]
                         },
                         "Space Before Conditionals": {
-                            type     : "checkbox",
-                            path     : "user/format/jsbeautify/@space_before_conditional",
-                            position : 5000
+                            type: "checkbox",
+                            path: "user/format/jsbeautify/@space_before_conditional",
+                            position: 5000
                         },
                         "Unescape Strings": {
-                            type     : "checkbox",
-                            path     : "user/format/jsbeautify/@unescape_strings",
-                            position : 6000
+                            type: "checkbox",
+                            path: "user/format/jsbeautify/@unescape_strings",
+                            position: 6000
                         }
                     }
                 }
@@ -104,19 +104,19 @@ define(function(require, exports, module) {
             if (this.disabled === true)
                 return;
     
-            var ace     = editor.ace;
-            var sel     = ace.selection;
+            var ace = editor.ace;
+            var sel = ace.selection;
             var session = ace.session;
-            var range   = sel.getRange();
+            var range = sel.getRange();
     
             // Load up current settings data
             var options = {
-                space_before_conditional : settings.getBool("user/format/jsbeautify/@space_before_conditional"),
-                keep_array_indentation   : settings.getBool("user/format/jsbeautify/@keeparrayindentation"),
-                preserve_newlines        : settings.getBool("user/format/jsbeautify/@preserveempty"),
-                unescape_strings         : settings.getBool("user/format/jsbeautify/@unescape_strings"),
-                jslint_happy             : settings.getBool("user/format/jsbeautify/@jslinthappy"),
-                brace_style              : settings.get("user/format/jsbeautify/@braces")
+                space_before_conditional: settings.getBool("user/format/jsbeautify/@space_before_conditional"),
+                keep_array_indentation: settings.getBool("user/format/jsbeautify/@keeparrayindentation"),
+                preserve_newlines: settings.getBool("user/format/jsbeautify/@preserveempty"),
+                unescape_strings: settings.getBool("user/format/jsbeautify/@unescape_strings"),
+                jslint_happy: settings.getBool("user/format/jsbeautify/@jslinthappy"),
+                brace_style: settings.get("user/format/jsbeautify/@braces")
             };
     
             if (session.getUseSoftTabs()) {
@@ -127,17 +127,17 @@ define(function(require, exports, module) {
                 options.indent_size = 1;
             }
     
-            var line   = session.getLine(range.start.row);
+            var line = session.getLine(range.start.row);
             var indent = line.match(/^\s*/)[0];
-            var trim   = false;
+            var trim = false;
     
             if (range.start.column < indent.length)
                 range.start.column = 0;
             else
                 trim = true;
     
-            var value  = session.getTextRange(range);
-            var type   = null;
+            var value = session.getTextRange(range);
+            var type = null;
     
             if (mode == "javascript" || mode == "json") {
                 type = "js";
@@ -200,7 +200,7 @@ define(function(require, exports, module) {
             /**
              * 
              */
-            formatCode : formatCode
+            formatCode: formatCode
         });
         
         register(null, {

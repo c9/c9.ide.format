@@ -6,17 +6,17 @@ define(function(require, exports, module) {
     return main;
 
     function main(options, imports, register) {
-        var Plugin     = imports.Plugin;
-        var ui         = imports.ui;
-        var commands   = imports.commands;
+        var Plugin = imports.Plugin;
+        var ui = imports.ui;
+        var commands = imports.commands;
         var tabManager = imports.tabManager;
-        var menus      = imports.menus;
-        var alert      = imports["dialog.alert"].show;
+        var menus = imports.menus;
+        var alert = imports["dialog.alert"].show;
         
         /***** Initialization *****/
         
         var plugin = new Plugin("Ajax.org", main.consumes);
-        var emit   = plugin.getEmitter();
+        var emit = plugin.getEmitter();
         
         var count = 200;
         var mnuFormat;
@@ -27,11 +27,11 @@ define(function(require, exports, module) {
             loaded = true;
             
             commands.addCommand({
-                name    : "formatcode",
-                hint    : "reformat selected JavaScript code in the editor",
-                msg     : "Beautifying selection.",
-                bindKey : { mac: "Command-Shift-B", win: "Ctrl-Shift-B" },
-                exec : function(editor, args) {
+                name: "formatcode",
+                hint: "reformat selected JavaScript code in the editor",
+                msg: "Beautifying selection.",
+                bindKey: { mac: "Command-Shift-B", win: "Ctrl-Shift-B" },
+                exec: function(editor, args) {
                     formatCode(args.mode, editor);
                 }
             }, plugin);
@@ -39,14 +39,14 @@ define(function(require, exports, module) {
             menus.addItemByPath("Edit/Code Formatting", null, 1400, plugin);
             
             menus.addItemByPath("Edit/Code Formatting/Auto Selected Formatter", new ui.item({
-                selected : true,
-                value    : "auto",
-                command  : "formatcode"
+                selected: true,
+                value: "auto",
+                command: "formatcode"
             }), 100, plugin);
             menus.addItemByPath("Edit/Code Formatting/~", new ui.divider(), 200, plugin);
             
             mnuFormat = menus.get("Edit/Code Formatting").menu;
-            mnuFormat.on("itemclick", function(e){
+            mnuFormat.on("itemclick", function(e) {
                 if (e.value && e.value != "auto")
                     formatCode(e.value);
             });
@@ -54,7 +54,7 @@ define(function(require, exports, module) {
         
         /***** Methods *****/
         
-        function getMode(editor){
+        function getMode(editor) {
             return editor.ace.session.syntax;
         }
         
@@ -78,10 +78,10 @@ define(function(require, exports, module) {
             }
         }
         
-        function addFormatter(caption, mode, plugin){
+        function addFormatter(caption, mode, plugin) {
             menus.addItemByPath("Edit/Code Formatting/" + caption, new ui.item({
-                value       : mode,
-                isAvailable : commands.commands.formatcode.isAvailable
+                value: mode,
+                isAvailable: commands.commands.formatcode.isAvailable
             }), count += 100, plugin);
         }
         
@@ -109,14 +109,14 @@ define(function(require, exports, module) {
             /**
              * 
              */
-            formatCode : formatCode,
+            formatCode: formatCode,
             
             /**
              * 
              */
-            addFormatter : addFormatter,
+            addFormatter: addFormatter,
             
-            _events : [
+            _events: [
                 /**
                  * @event format
                  * @param {Object} e

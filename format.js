@@ -36,7 +36,13 @@ define(function(require, exports, module) {
                 }
             }, plugin);
             
-            menus.addItemByPath("Edit/Code Formatting", null, 1400, plugin);
+            mnuFormat = new ui.menu({
+                onitemclick: function(e) {
+                    if (e.value && e.value != "auto")
+                        formatCode(e.value);
+                }
+            });
+            menus.addItemByPath("Edit/Code Formatting", mnuFormat, 1400, plugin);
             
             menus.addItemByPath("Edit/Code Formatting/Auto Selected Formatter", new ui.item({
                 selected: true,
@@ -44,12 +50,6 @@ define(function(require, exports, module) {
                 command: "formatcode"
             }), 100, plugin);
             menus.addItemByPath("Edit/Code Formatting/~", new ui.divider(), 200, plugin);
-            
-            mnuFormat = menus.get("Edit/Code Formatting").menu;
-            mnuFormat.on("itemclick", function(e) {
-                if (e.value && e.value != "auto")
-                    formatCode(e.value);
-            });
         }
         
         /***** Methods *****/

@@ -32,7 +32,7 @@ define(function(require, exports, module) {
                 msg: "Beautifying selection.",
                 bindKey: { mac: "Command-Shift-B", win: "Ctrl-Shift-B" },
                 exec: function(editor, args) {
-                    formatCode(args.mode, editor);
+                    formatCode(args.mode, editor, args.all);
                 }
             }, plugin);
             
@@ -58,7 +58,7 @@ define(function(require, exports, module) {
             return editor.ace.session.syntax;
         }
         
-        function formatCode(mode, editor) {
+        function formatCode(mode, editor, all) {
             if (!editor)
                 editor = tabManager.focussedTab.editor;
             
@@ -66,7 +66,7 @@ define(function(require, exports, module) {
                 mode = getMode(editor);
             
             var range = editor.ace.selection.getRange();
-            if (range.start.row === range.end.row
+            if (all || range.start.row === range.end.row
                 && range.start.column === range.end.column) {
                 editor.ace.selection.selectAll();
             }

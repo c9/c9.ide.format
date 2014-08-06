@@ -34,7 +34,7 @@ define(function(require, exports, module) {
             
             Object.keys(MODES).forEach(function(name) {
                 format.addFormatter(MODES[name], name, plugin);
-            })
+            });
             
             settings.on("read", function(){
                 settings.setDefaults("user/format/jsbeautify", [
@@ -95,7 +95,7 @@ define(function(require, exports, module) {
                         }
                     }
                 }
-            }, plugin)
+            }, plugin);
         }
         
         /***** Methods *****/
@@ -167,7 +167,7 @@ define(function(require, exports, module) {
                 return false;
             }
     
-            var end = session.replace(range, value);
+            var end = session.diffAndReplace(range, value);
             sel.setSelectionRange(Range.fromPoints(range.start, end));
             
             return true;

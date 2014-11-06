@@ -23,8 +23,10 @@ define(function(require, exports, module) {
             "javascript" : "Javascript (JS Beautify)",
             "html"       : "HTML (JS Beautify)",
             "css"        : "CSS (JS Beautify)",
+            "less"       : "Less (JS Beautify)",
             "xml"        : "XML (JS Beautify)",
-            "json"       : "JSON (JS Beautify)"
+            "json"       : "JSON (JS Beautify)",
+            "handlebars" : "Handlebars (JS Beautify)",
         };
         
         var loaded = false;
@@ -141,7 +143,7 @@ define(function(require, exports, module) {
     
             if (mode == "javascript" || mode == "json") {
                 type = "js";
-            } else if (mode == "css"){
+            } else if (mode == "css" || mode == "less"){
                 type = "css";
             } else if (/^\s*<!?\w/.test(value)) {
                 type = "html";
@@ -154,6 +156,9 @@ define(function(require, exports, module) {
                     type = "html";
                 else
                     type = "js";
+            } else if (mode == "handlebars") {
+                options.indent_handlebars = true;
+                type = "html";
             }
     
             try {

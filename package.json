@@ -9,14 +9,12 @@
         "url": "http://github.com/c9/c9.ide.format.git"
     },
     "plugins": {
-        "plugin": {
-            "format": {}
-        }
+        "format": {}
     },
     "categories": [
         "core"
     ],
     "licenses": [
-        ""
+        "MIT"
     ]
 }

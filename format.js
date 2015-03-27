@@ -98,6 +98,7 @@ define(function(require, exports, module) {
         });
         plugin.on("unload", function() {
             loaded = false;
+            mnuFormat = null;
         });
         
         /***** Register and define API *****/

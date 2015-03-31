@@ -1,15 +1,16 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "Plugin", "format", "settings", "preferences"
+        "Plugin", "format", "settings", "preferences", "util"
     ];
     main.provides = ["format.jsbeautify"];
     return main;
 
     function main(options, imports, register) {
+        var util = imports.util;
+        var prefs = imports.preferences;
         var Plugin = imports.Plugin;
         var format = imports.format;
         var settings = imports.settings;
-        var prefs = imports.preferences;
         
         var Range = require("ace/range").Range;
         var jsbeautify = require("./lib_jsbeautify");
@@ -45,7 +46,9 @@ define(function(require, exports, module) {
                     ["jslinthappy", "false"],
                     ["braces", "end-expand"],
                     ["space_before_conditional", "true"],
-                    ["unescape_strings", "true"]
+                    ["unescape_strings", "true"],
+                    ["indent_inner_html", false],
+                    ["advanced", {}]
                 ]);
             });
             
@@ -94,6 +97,11 @@ define(function(require, exports, module) {
                             type: "checkbox",
                             path: "user/format/jsbeautify/@unescape_strings",
                             position: 6000
+                        },
+                        "Indent Inner Html": {
+                            type: "checkbox",
+                            path: "user/format/jsbeautify/@indent_inner_html",
+                            position: 6000
                         }
                     }
                 }
@@ -118,8 +126,13 @@ define(function(require, exports, module) {
                 preserve_newlines: settings.getBool("user/format/jsbeautify/@preserveempty"),
                 unescape_strings: settings.getBool("user/format/jsbeautify/@unescape_strings"),
                 jslint_happy: settings.getBool("user/format/jsbeautify/@jslinthappy"),
-                brace_style: settings.get("user/format/jsbeautify/@braces")
+                brace_style: settings.get("user/format/jsbeautify/@braces"),
+                indent_inner_html: settings.get("user/format/jsbeautify/@indent_inner_html")
             };
+            
+            var json = settings.get("user/format/jsbeautify/@advanced");
+            if (json && typeof json == "object")
+                util.extend(options, json);
     
             if (session.getUseSoftTabs()) {
                 options.indent_char = " ";

@@ -127,7 +127,8 @@ define(function(require, exports, module) {
                 unescape_strings: settings.getBool("user/format/jsbeautify/@unescape_strings"),
                 jslint_happy: settings.getBool("user/format/jsbeautify/@jslinthappy"),
                 brace_style: settings.get("user/format/jsbeautify/@braces"),
-                indent_inner_html: settings.get("user/format/jsbeautify/@indent_inner_html")
+                indent_inner_html: settings.get("user/format/jsbeautify/@indent_inner_html"),
+                e4x: true
             };
             
             var json = settings.get("user/format/jsbeautify/@advanced");
@@ -154,7 +155,7 @@ define(function(require, exports, module) {
             var value = session.getTextRange(range);
             var type = null;
     
-            if (mode == "javascript" || mode == "json") {
+            if (mode == "javascript" || mode == "json" || mode == "jsx") {
                 type = "js";
             } else if (mode == "css" || mode == "less"){
                 type = "css";

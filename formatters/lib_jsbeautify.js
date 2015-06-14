@@ -159,6 +159,14 @@ var define, window = module.exports = {};
         return s.replace(/^\s+|\s+$/g, '');
     }
 
+    function ltrim(s) {
+        return s.replace(/^\s+/g, '');
+    }
+
+    function rtrim(s) {
+        return s.replace(/\s+$/g, '');
+    }
+
     function js_beautify(js_source_text, options) {
         "use strict";
         var beautifier = new Beautifier(js_source_text, options);
@@ -259,6 +267,7 @@ var define, window = module.exports = {};
 
         opt.indent_size = options.indent_size ? parseInt(options.indent_size, 10) : 4;
         opt.indent_char = options.indent_char ? options.indent_char : ' ';
+        opt.eol = options.eol ? options.eol : '\n';
         opt.preserve_newlines = (options.preserve_newlines === undefined) ? true : options.preserve_newlines;
         opt.break_chained_methods = (options.break_chained_methods === undefined) ? false : options.break_chained_methods;
         opt.max_preserve_newlines = (options.max_preserve_newlines === undefined) ? 0 : parseInt(options.max_preserve_newlines, 10);
@@ -272,6 +281,7 @@ var define, window = module.exports = {};
         opt.wrap_line_length = (options.wrap_line_length === undefined) ? 0 : parseInt(options.wrap_line_length, 10);
         opt.e4x = (options.e4x === undefined) ? false : options.e4x;
         opt.end_with_newline = (options.end_with_newline === undefined) ? false : options.end_with_newline;
+        opt.comma_first = (options.comma_first === undefined) ? false : options.comma_first;
 
 
         // force opt.space_after_anon_function to true if opt.jslint_happy
@@ -283,6 +293,8 @@ var define, window = module.exports = {};
             opt.indent_char = '\t';
             opt.indent_size = 1;
         }
+
+        opt.eol = opt.eol.replace(/\\r/, '\r').replace(/\\n/, '\n')
 
         //----------------------------------
         indent_string = '';
@@ -348,6 +360,10 @@ var define, window = module.exports = {};
                 sweet_code += '\n';
             }
 
+            if (opt.eol != '\n') {
+                sweet_code = sweet_code.replace(/[\r]?[\n]/mg, opt.eol);
+            }
+
             return sweet_code;
         };
 
@@ -380,7 +396,6 @@ var define, window = module.exports = {};
 
         // we could use just string.split, but
         // IE doesn't like returning empty strings
-
         function split_newlines(s) {
             //return s.split(/\x0d\x0a|\x0a/);
 
@@ -443,6 +458,16 @@ var define, window = module.exports = {};
         }
 
         function print_token(printable_token) {
+            if (opt.comma_first && last_type === 'TK_COMMA'
+                && output.just_added_newline()) {
+                if(output.previous_line.last() === ',') {
+                    output.previous_line.pop();
+                    print_token_line_indentation();
+                    output.add_token(',');
+                    output.space_before_token = true;
+                }
+            }
+
             printable_token = printable_token || current_token.text;
             print_token_line_indentation();
             output.add_token(printable_token);
@@ -502,6 +527,7 @@ var define, window = module.exports = {};
                     (last_type === 'TK_WORD' && flags.mode === MODE.BlockStatement
                         && !flags.in_case
                         && !(current_token.text === '--' || current_token.text === '++')
+                        && last_last_text !== 'function'
                         && current_token.type !== 'TK_WORD' && current_token.type !== 'TK_RESERVED') ||
                     (flags.mode === MODE.ObjectLiteral && (
                         (flags.last_text === ':' && flags.ternary_depth === 0) || (last_type === 'TK_RESERVED' && in_array(flags.last_text, ['get', 'set']))))
@@ -623,6 +649,11 @@ var define, window = module.exports = {};
                 if (opt.space_before_conditional) {
                     output.space_before_token = true;
                 }
+            }
+
+            // Should be a space between await and an IIFE
+            if(current_token.text === '(' && last_type === 'TK_RESERVED' && flags.last_word === 'await'){
+                output.space_before_token = true;
             }
 
             // Support of this kind of newline preservation.
@@ -846,7 +877,7 @@ var define, window = module.exports = {};
                     }
                 }
                 if (last_type === 'TK_RESERVED' || last_type === 'TK_WORD') {
-                    if (last_type === 'TK_RESERVED' && in_array(flags.last_text, ['get', 'set', 'new', 'return', 'export'])) {
+                    if (last_type === 'TK_RESERVED' && in_array(flags.last_text, ['get', 'set', 'new', 'return', 'export', 'async'])) {
                         output.space_before_token = true;
                     } else if (last_type === 'TK_RESERVED' && flags.last_text === 'default' && last_last_text === 'export') {
                         output.space_before_token = true;
@@ -1023,6 +1054,11 @@ var define, window = module.exports = {};
                     print_newline(false, true);
                 } else {
                     output.space_before_token = true;
+                    // for comma-first, we want to allow a newline before the comma
+                    // to turn into a newline after the comma, which we will fixup later
+                    if (opt.comma_first) {
+                        allow_wrap_or_preserved_newline();
+                    }
                 }
                 return;
             }
@@ -1037,6 +1073,11 @@ var define, window = module.exports = {};
             } else {
                 // EXPR or DO_BLOCK
                 output.space_before_token = true;
+                // for comma-first, we want to allow a newline before the comma
+                // to turn into a newline after the comma, which we will fixup later
+                if (opt.comma_first) {
+                    allow_wrap_or_preserved_newline();
+                }
             }
 
         }
@@ -1074,12 +1115,6 @@ var define, window = module.exports = {};
                 return;
             }
 
-            // http://www.ecma-international.org/ecma-262/5.1/#sec-7.9.1
-            // if there is a newline between -- or ++ and anything else we should preserve it.
-            if (current_token.wanted_newline && (current_token.text === '--' || current_token.text === '++')) {
-                print_newline(false, true);
-            }
-
             // Allow line wrapping between operators
             if (last_type === 'TK_OPERATOR') {
                 allow_wrap_or_preserved_newline();
@@ -1094,18 +1129,33 @@ var define, window = module.exports = {};
                 space_before = false;
                 space_after = false;
 
+                // http://www.ecma-international.org/ecma-262/5.1/#sec-7.9.1
+                // if there is a newline between -- or ++ and anything else we should preserve it.
+                if (current_token.wanted_newline && (current_token.text === '--' || current_token.text === '++')) {
+                    print_newline(false, true);
+                }
+
                 if (flags.last_text === ';' && is_expression(flags.mode)) {
                     // for (;; ++i)
                     //        ^^^
                     space_before = true;
                 }
 
-                if (last_type === 'TK_RESERVED' || last_type === 'TK_END_EXPR') {
+                if (last_type === 'TK_RESERVED') {
                     space_before = true;
+                } else if (last_type === 'TK_END_EXPR') {
+                    space_before = !(flags.last_text === ']' && (current_token.text === '--' || current_token.text === '++'));
                 } else if (last_type === 'TK_OPERATOR') {
-                    space_before =
-                        (in_array(current_token.text, ['--', '-']) && in_array(flags.last_text, ['--', '-'])) ||
-                        (in_array(current_token.text, ['++', '+']) && in_array(flags.last_text, ['++', '+']));
+                    // a++ + ++b;
+                    // a - -b
+                    space_before = in_array(current_token.text, ['--', '-', '++', '+']) && in_array(flags.last_text, ['--', '-', '++', '+']);
+                    // + and - are not unary when preceeded by -- or ++ operator
+                    // a-- + b
+                    // a * +b
+                    // a - -b
+                    if (in_array(current_token.text, ['+', '-']) && in_array(flags.last_text, ['--', '++'])) {
+                        space_after = true;
+                    }
                 }
 
                 if ((flags.mode === MODE.BlockStatement || flags.mode === MODE.Statement) && (flags.last_text === '{' || flags.last_text === ';')) {
@@ -1156,7 +1206,7 @@ var define, window = module.exports = {};
                 print_newline(false, true);
                 if (javadoc) {
                     // javadoc: reformat and re-indent
-                    print_token(' ' + trim(lines[j]));
+                    print_token(' ' + ltrim(lines[j]));
                 } else if (starless && lines[j].length > lastIndentLength) {
                     // starless: re-indent non-empty content, avoiding trim
                     print_token(lines[j].substring(lastIndentLength));
@@ -1256,6 +1306,16 @@ var define, window = module.exports = {};
             _empty = false;
         }
 
+        this.pop = function() {
+            var item = null;
+            if (!_empty) {
+                item = _items.pop();
+                _character_count -= item.length;
+                _empty = _items.length === 0;
+            }
+            return item;
+        }
+
         this.remove_indent = function() {
             if (_indent_count > 0) {
                 _indent_count -= 1;
@@ -1292,6 +1352,7 @@ var define, window = module.exports = {};
         var lines =[];
         this.baseIndentString = baseIndentString;
         this.indent_string = indent_string;
+        this.previous_line = null;
         this.current_line = null;
         this.space_before_token = false;
 
@@ -1306,6 +1367,7 @@ var define, window = module.exports = {};
             }
 
             if (force_newline || !this.just_added_newline()) {
+                this.previous_line = this.current_line;
                 this.current_line = new OutputLine(this);
                 lines.push(this.current_line);
                 return true;
@@ -1382,6 +1444,8 @@ var define, window = module.exports = {};
                 this.current_line = lines[lines.length - 1]
                 this.current_line.trim();
             }
+
+            this.previous_line = lines.length > 1 ? lines[lines.length - 2] : null;
         }
 
         this.just_added_newline = function() {
@@ -1421,8 +1485,8 @@ var define, window = module.exports = {};
                 +' <%= <% %> <?= <? ?>').split(' '); // try to be a good boy and try not to break the markup language identifiers
 
         // words which should always start on new line.
-        this.line_starters = 'continue,try,throw,return,var,let,const,if,switch,case,default,for,while,break,function,yield,import,export'.split(',');
-        var reserved_words = this.line_starters.concat(['do', 'in', 'else', 'get', 'set', 'new', 'catch', 'finally', 'typeof']);
+        this.line_starters = 'continue,try,throw,return,var,let,const,if,switch,case,default,for,while,break,function,import,export'.split(',');
+        var reserved_words = this.line_starters.concat(['do', 'in', 'else', 'get', 'set', 'new', 'catch', 'finally', 'typeof', 'yield', 'async', 'await']);
 
         var n_newlines, whitespace_before_token, in_html_comment, tokens, parser_pos;
         var input_length;
@@ -1457,13 +1521,13 @@ var define, window = module.exports = {};
 
                 if (next.type === 'TK_START_BLOCK' || next.type === 'TK_START_EXPR') {
                     next.parent = last;
+                    open_stack.push(open);
                     open = next;
-                    open_stack.push(next);
                 }  else if ((next.type === 'TK_END_BLOCK' || next.type === 'TK_END_EXPR') &&
                     (open && (
                         (next.text === ']' && open.text === '[') ||
                         (next.text === ')' && open.text === '(') ||
-                        (next.text === '}' && open.text === '}')))) {
+                        (next.text === '}' && open.text === '{')))) {
                     next.parent = open.parent;
                     open = open_stack.pop();
                 }
@@ -1656,7 +1720,7 @@ var define, window = module.exports = {};
             if (c === '`' || c === "'" || c === '"' || // string
                 (
                     (c === '/') || // regexp
-                    (opts.e4x && c === "<" && input.slice(parser_pos - 1).match(/^<([-a-zA-Z:0-9_.]+|{[^{}]*}|!\[CDATA\[[\s\S]*?\]\])\s*([-a-zA-Z:0-9_.]+=('[^']*'|"[^"]*"|{[^{}]*})\s*)*\/?\s*>/)) // xml
+                    (opts.e4x && c === "<" && input.slice(parser_pos - 1).match(/^<([-a-zA-Z:0-9_.]+|{[^{}]*}|!\[CDATA\[[\s\S]*?\]\])(\s+[-a-zA-Z:0-9_.]+\s*=\s*('[^']*'|"[^"]*"|{.*?}))*\s*(\/?)\s*>/)) // xml
                 ) && ( // regex and xml can only appear in specific locations during parsing
                     (last_token.type === 'TK_RESERVED' && in_array(last_token.text , ['return', 'case', 'throw', 'else', 'do', 'typeof', 'yield'])) ||
                     (last_token.type === 'TK_END_EXPR' && last_token.text === ')' &&
@@ -1697,7 +1761,7 @@ var define, window = module.exports = {};
                     //
                     // handle e4x xml literals
                     //
-                    var xmlRegExp = /<(\/?)([-a-zA-Z:0-9_.]+|{[^{}]*}|!\[CDATA\[[\s\S]*?\]\])\s*([-a-zA-Z:0-9_.]+=('[^']*'|"[^"]*"|{[^{}]*})\s*)*(\/?)\s*>/g;
+                    var xmlRegExp = /<(\/?)([-a-zA-Z:0-9_.]+|{[^{}]*}|!\[CDATA\[[\s\S]*?\]\])(\s+[-a-zA-Z:0-9_.]+\s*=\s*('[^']*'|"[^"]*"|{.*?}))*\s*(\/?)\s*>/g;
                     var xmlStr = input.slice(parser_pos - 1);
                     var match = xmlRegExp.exec(xmlStr);
                     if (match && match.index === 0) {
@@ -1720,8 +1784,9 @@ var define, window = module.exports = {};
                             match = xmlRegExp.exec(xmlStr);
                         }
                         var xmlLength = match ? match.index + match[0].length : xmlStr.length;
+                        xmlStr = xmlStr.slice(0, xmlLength);
                         parser_pos += xmlLength - 1;
-                        return [xmlStr.slice(0, xmlLength), "TK_STRING"];
+                        return [xmlStr, "TK_STRING"];
                     }
                 } else {
                     //
@@ -1733,6 +1798,11 @@ var define, window = module.exports = {};
                             (esc || (input.charAt(parser_pos) !== sep &&
                             (sep === '`' || !acorn.newline.test(input.charAt(parser_pos)))))) {
                         resulting_string += input.charAt(parser_pos);
+                        // Handle \r\n linebreaks after escapes or in template strings
+                        if (input.charAt(parser_pos) === '\r' && input.charAt(parser_pos + 1) === '\n') {
+                            parser_pos += 1;
+                            resulting_string += '\n';
+                        }
                         if (esc) {
                             if (input.charAt(parser_pos) === 'x' || input.charAt(parser_pos) === 'u') {
                                 has_char_escapes = true;
@@ -1978,6 +2048,7 @@ var define, window = module.exports = {};
         selector_separator_newline (true) - separate selectors with newline or
                                             not (e.g. "a,\nbr" or "a, br")
         end_with_newline (false)          - end with a newline
+        newline_between_rules (true)      - add a new line after every css rule
 
     e.g
 
@@ -1986,6 +2057,7 @@ var define, window = module.exports = {};
       'indent_char': '\t',
       'selector_separator': ' ',
       'end_with_newline': false,
+      'newline_between_rules': true
     });
 */
 
@@ -1999,12 +2071,17 @@ var define, window = module.exports = {};
         var indentCharacter = options.indent_char || ' ';
         var selectorSeparatorNewline = (options.selector_separator_newline === undefined) ? true : options.selector_separator_newline;
         var end_with_newline = (options.end_with_newline === undefined) ? false : options.end_with_newline;
+        var newline_between_rules = (options.newline_between_rules === undefined) ? true : options.newline_between_rules;
 
         // compatibility
         if (typeof indentSize === "string") {
             indentSize = parseInt(indentSize, 10);
         }
 
+        if(options.indent_with_tabs){
+            indentCharacter = '\t';
+            indentSize = 1;
+        }
 
         // tokenizer
         var whiteRe = /^\s+$/;
@@ -2012,6 +2089,7 @@ var define, window = module.exports = {};
 
         var pos = -1,
             ch;
+        var parenLevel = 0;
 
         function next() {
             ch = source_text.charAt(++pos);
@@ -2019,6 +2097,7 @@ var define, window = module.exports = {};
         }
 
         function peek(skipWhitespace) {
+            var result = '';
             var prev_pos = pos;
             if (skipWhitespace) {
                 eatWhitespace();
@@ -2054,7 +2133,7 @@ var define, window = module.exports = {};
         function eatWhitespace() {
             var result = '';
             while (whiteRe.test(peek())) {
-                next()
+                next();
                 result += ch;
             }
             return result;
@@ -2066,14 +2145,14 @@ var define, window = module.exports = {};
                 result = ch;
             }
             while (whiteRe.test(next())) {
-                result += ch
+                result += ch;
             }
             return result;
         }
 
         function eatComment(singleLine) {
             var start = pos;
-            var singleLine = peek() === "/";
+            singleLine = peek() === "/";
             next();
             while (next()) {
                 if (!singleLine && ch === "*" && peek() === "/") {
@@ -2097,9 +2176,9 @@ var define, window = module.exports = {};
         // and the next special character found opens
         // a new block
         function foundNestedPseudoClass() {
-            for (var i = pos + 1; i < source_text.length; i++){
+            for (var i = pos + 1; i < source_text.length; i++) {
                 var ch = source_text.charAt(i);
-                if (ch === "{"){
+                if (ch === "{") {
                     return true;
                 } else if (ch === ";" || ch === "}" || ch === ")") {
                     return false;
@@ -2141,15 +2220,16 @@ var define, window = module.exports = {};
         };
 
         print.newLine = function(keepWhitespace) {
-            if (!keepWhitespace) {
-                print.trim();
-            }
-
             if (output.length) {
+                if (!keepWhitespace && output[output.length - 1] !== '\n') {
+                    print.trim();
+                }
+
                 output.push('\n');
-            }
-            if (basebaseIndentString) {
-                output.push(basebaseIndentString);
+
+                if (basebaseIndentString) {
+                    output.push(basebaseIndentString);
+                }
             }
         };
         print.singleSpace = function() {
@@ -2164,11 +2244,8 @@ var define, window = module.exports = {};
             }
         };
 
-        
+
         var output = [];
-        if (basebaseIndentString) {
-            output.push(basebaseIndentString);
-        }
         /*_____________________--------------------_____________________*/
 
         var insideRule = false;
@@ -2180,21 +2257,25 @@ var define, window = module.exports = {};
             var whitespace = skipWhitespace();
             var isAfterSpace = whitespace !== '';
             var isAfterNewline = whitespace.indexOf('\n') !== -1;
-            var last_top_ch = top_ch;
-            var top_ch = ch;
+            last_top_ch = top_ch;
+            top_ch = ch;
 
             if (!ch) {
                 break;
             } else if (ch === '/' && peek() === '*') { /* css comment */
-                var header = lookBack("");
-                print.newLine();
+                var header = indentLevel === 0;
+
+                if (isAfterNewline || header) {
+                    print.newLine();
+                }
+
                 output.push(eatComment());
                 print.newLine();
                 if (header) {
                     print.newLine(true);
                 }
             } else if (ch === '/' && peek() === '/') { // single line comment
-                if (!isAfterNewline && last_top_ch !== '{') {
+                if (!isAfterNewline && last_top_ch !== '{' ) {
                     print.trim();
                 }
                 print.singleSpace();
@@ -2208,7 +2289,17 @@ var define, window = module.exports = {};
                 output.push(ch);
 
                 // strip trailing space, if present, for hash property checks
-                var variableOrRule = peekString(": ,;{}()[]/='\"").replace(/\s$/, '');
+                var variableOrRule = peekString(": ,;{}()[]/='\"");
+
+                if (variableOrRule.match(/[ :]$/)) {
+                    // we have a variable or pseudo-class, add it and insert one space before continuing
+                    next();
+                    variableOrRule = eatString(": ").replace(/\s$/, '');
+                    output.push(variableOrRule);
+                    print.singleSpace();
+                }
+
+                variableOrRule = variableOrRule.replace(/\s$/, '')
 
                 // might be a nesting at-rule
                 if (variableOrRule in css_beautify.NESTED_AT_RULE) {
@@ -2216,12 +2307,6 @@ var define, window = module.exports = {};
                     if (variableOrRule in css_beautify.CONDITIONAL_GROUP_RULE) {
                         enteringConditionalGroup = true;
                     }
-                } else if (': '.indexOf(variableOrRule[variableOrRule.length -1]) >= 0) {
-                    //we have a variable, add it and insert one space before continuing
-                    next();
-                    variableOrRule = eatString(": ").replace(/\s$/, '');
-                    output.push(variableOrRule);
-                    print.singleSpace();
                 }
             } else if (ch === '{') {
                 if (peek(true) === '}') {
@@ -2229,6 +2314,10 @@ var define, window = module.exports = {};
                     next();
                     print.singleSpace();
                     output.push("{}");
+                    print.newLine();
+                    if (newline_between_rules && indentLevel === 0) {
+                        print.newLine(true);
+                    }
                 } else {
                     indent();
                     print["{"](ch);
@@ -2248,10 +2337,13 @@ var define, window = module.exports = {};
                 if (nestedLevel) {
                     nestedLevel--;
                 }
+                if (newline_between_rules && indentLevel === 0) {
+                    print.newLine(true);
+                }
             } else if (ch === ":") {
                 eatWhitespace();
-                if ((insideRule || enteringConditionalGroup) && 
-                        !(lookBack("&") || foundNestedPseudoClass())) {
+                if ((insideRule || enteringConditionalGroup) &&
+                    !(lookBack("&") || foundNestedPseudoClass())) {
                     // 'property: value' delimiter
                     // which could be in a conditional group query
                     output.push(':');
@@ -2288,6 +2380,7 @@ var define, window = module.exports = {};
                         }
                     }
                 } else {
+                    parenLevel++;
                     if (isAfterSpace) {
                         print.singleSpace();
                     }
@@ -2296,10 +2389,11 @@ var define, window = module.exports = {};
                 }
             } else if (ch === ')') {
                 output.push(ch);
+                parenLevel--;
             } else if (ch === ',') {
                 output.push(ch);
                 eatWhitespace();
-                if (!insideRule && selectorSeparatorNewline) {
+                if (!insideRule && selectorSeparatorNewline && parenLevel < 1) {
                     print.newLine();
                 } else {
                     print.singleSpace();
@@ -2312,7 +2406,8 @@ var define, window = module.exports = {};
                 }
                 output.push(ch);
             } else if (ch === '=') { // no whitespace before or after
-                eatWhitespace();
+                eatWhitespace()
+                ch = '=';
                 output.push(ch);
             } else {
                 if (isAfterSpace) {
@@ -2324,7 +2419,12 @@ var define, window = module.exports = {};
         }
 
 
-        var sweetCode = output.join('').replace(/[\r\n\t ]+$/, '');
+        var sweetCode = '';
+        if (basebaseIndentString) {
+            sweetCode += basebaseIndentString;
+        }
+
+        sweetCode += output.join('').replace(/[\r\n\t ]+$/, '');
 
         // establish end_with_newline
         if (end_with_newline) {
@@ -2426,7 +2526,7 @@ var define, window = module.exports = {};
     max_preserve_newlines (default unlimited) - maximum number of line breaks to be preserved in one chunk
     indent_handlebars (default false) - format and indent {{#foo}} and {{/foo}}
     end_with_newline (false)          - end with a newline
-
+    extra_liners (default [head,body,/html]) -List of tags that should have an extra newline before them.
 
     e.g.
 
@@ -2439,7 +2539,8 @@ var define, window = module.exports = {};
       'unformatted': ['a', 'sub', 'sup', 'b', 'i', 'u'],
       'preserve_newlines': true,
       'max_preserve_newlines': 5,
-      'indent_handlebars': false
+      'indent_handlebars': false,
+      'extra_liners': ['/html']
     });
 */
 
@@ -2470,7 +2571,10 @@ var define, window = module.exports = {};
             preserve_newlines,
             max_preserve_newlines,
             indent_handlebars,
-            end_with_newline;
+            wrap_attributes,
+            wrap_attributes_indent_size,
+            end_with_newline,
+            extra_liners;
 
         options = options || {};
 
@@ -2491,7 +2595,17 @@ var define, window = module.exports = {};
             (isNaN(parseInt(options.max_preserve_newlines, 10)) ? 32786 : parseInt(options.max_preserve_newlines, 10))
             : 0;
         indent_handlebars = (options.indent_handlebars === undefined) ? false : options.indent_handlebars;
+        wrap_attributes = (options.wrap_attributes === undefined) ? 'auto' : options.wrap_attributes;
+        wrap_attributes_indent_size = (options.wrap_attributes_indent_size === undefined) ? indent_size : parseInt(options.wrap_attributes_indent_size, 10) || indent_size;
         end_with_newline = (options.end_with_newline === undefined) ? false : options.end_with_newline;
+        extra_liners = Array.isArray(options.extra_liners) ?
+            options.extra_liners.concat() : (typeof options.extra_liners === 'string') ?
+            options.extra_liners.split(',') : 'head,body,/html'.split(',');
+
+        if(options.indent_with_tabs){
+            indent_character = '\t';
+            indent_size = 1;
+        }
 
         function Parser() {
 
@@ -2510,8 +2624,8 @@ var define, window = module.exports = {};
 
             this.Utils = { //Uilities made available to the various functions
                 whitespace: "\n\r\t ".split(''),
-                single_token: 'br,input,link,meta,!doctype,basefont,base,area,hr,wbr,param,img,isindex,?xml,embed,?php,?,?='.split(','), //all the single tags for HTML
-                extra_liners: 'head,body,/html'.split(','), //for tags that need a line of whitespace before them
+                single_token: 'br,input,link,meta,source,!doctype,basefont,base,area,hr,wbr,param,img,isindex,?xml,embed,?php,?,?='.split(','), //all the single tags for HTML
+                extra_liners: extra_liners, //for tags that need a line of whitespace before them
                 in_array: function(what, arr) {
                     for (var i = 0; i < arr.length; i++) {
                         if (what === arr[i]) {
@@ -2522,8 +2636,7 @@ var define, window = module.exports = {};
                 }
             };
 
-            // Return true iff the given text is composed entirely of
-            // whitespace.
+            // Return true if the given text is composed entirely of whitespace.
             this.is_whitespace = function(text) {
                 for (var n = 0; n < text.length; text++) {
                     if (!this.Utils.in_array(text.charAt(n), this.Utils.whitespace)) {
@@ -2531,7 +2644,7 @@ var define, window = module.exports = {};
                     }
                 }
                 return true;
-            }
+            };
 
             this.traverse_whitespace = function() {
                 var input_char = '';
@@ -2588,6 +2701,8 @@ var define, window = module.exports = {};
                         if (peek3 === '{{#' || peek3 === '{{/') {
                             // These are tags and not content.
                             break;
+                        } else if (peek3 === '{{!') {
+                            return [this.get_tag(), 'TK_TAG_HANDLEBARS_COMMENT'];
                         } else if (this.input.substr(this.pos, 2) === '{{') {
                             if (this.get_tag(true) === '{{else}}') {
                                 break;
@@ -2677,6 +2792,7 @@ var define, window = module.exports = {};
                     content = [],
                     comment = '',
                     space = false,
+                    first_attr = true,
                     tag_start, tag_end,
                     tag_start_char,
                     orig_pos = this.pos,
@@ -2715,6 +2831,19 @@ var define, window = module.exports = {};
                         //no space after = or before >
                         this.space_or_wrap(content);
                         space = false;
+                        if (!first_attr && wrap_attributes === 'force' &&  input_char !== '/') {
+                            this.print_newline(true, content);
+                            this.print_indentation(content);
+                            for (var count = 0; count < wrap_attributes_indent_size; count++) {
+                                content.push(indent_character);
+                            }
+                        }
+                        for (var i = 0; i < content.length; i++) {
+                          if (content[i] === ' ') {
+                            first_attr = false;
+                            break;
+                          }
+                        }
                     }
 
                     if (indent_handlebars && tag_start_char === '<') {
@@ -2735,8 +2864,8 @@ var define, window = module.exports = {};
                     }
 
                     if (indent_handlebars && !tag_start_char) {
-                        if (content.length >= 2 && content[content.length - 1] === '{' && content[content.length - 2] == '{') {
-                            if (input_char === '#' || input_char === '/') {
+                        if (content.length >= 2 && content[content.length - 1] === '{' && content[content.length - 2] === '{') {
+                            if (input_char === '#' || input_char === '/' || input_char === '!') {
                                 tag_start = this.pos - 3;
                             } else {
                                 tag_start = this.pos - 2;
@@ -2749,6 +2878,13 @@ var define, window = module.exports = {};
                     content.push(input_char); //inserts character at-a-time (or string)
 
                     if (content[1] && content[1] === '!') { //if we're in a comment, do something special
+                        // We treat all comments as literals, even more than preformatted tags
+                        // we just look for the appropriate close tag
+                        content = [this.get_comment(tag_start)];
+                        break;
+                    }
+
+                    if (indent_handlebars && content[1] && content[1] === '{' && content[2] && content[2] === '!') { //if we're in a comment, do something special
                         // We treat all comments as literals, even more than preformatted tags
                         // we just look for the appropriate close tag
                         content = [this.get_comment(tag_start)];
@@ -2880,6 +3016,9 @@ var define, window = module.exports = {};
                             matched = true;
                         } else if (comment.indexOf('<!--') === 0) { // <!-- comment ...
                             delimiter = '-->';
+                            matched = true;
+                        } else if (comment.indexOf('{{!') === 0) { // {{! handlebars comment
+                            delimiter = '}}';
                             matched = true;
                         }
                     }
@@ -3132,7 +3271,7 @@ var define, window = module.exports = {};
                             tag_extracted_from_last_output = multi_parser.output[multi_parser.output.length - 1].match(/(?:<|{{#)\s*(\w+)/);
                         }
                         if (tag_extracted_from_last_output === null ||
-                            tag_extracted_from_last_output[1] !== tag_name) {
+                            (tag_extracted_from_last_output[1] !== tag_name && !multi_parser.Utils.in_array(tag_extracted_from_last_output[1], unformatted))) {
                             multi_parser.print_newline(false, multi_parser.output);
                         }
                     }
@@ -3155,6 +3294,10 @@ var define, window = module.exports = {};
                         multi_parser.indent_content = false;
                     }
                     multi_parser.current_mode = 'CONTENT';
+                    break;
+                case 'TK_TAG_HANDLEBARS_COMMENT':
+                    multi_parser.print_token(multi_parser.token_text);
+                    multi_parser.current_mode = 'TAG';
                     break;
                 case 'TK_CONTENT':
                     multi_parser.print_token(multi_parser.token_text);

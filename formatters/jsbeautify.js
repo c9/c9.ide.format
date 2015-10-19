@@ -54,7 +54,7 @@ define(function(require, exports, module) {
             
             format.on("format", function(e) {
                 if (MODES[e.mode])
-                    return formatCode(e.editor, e.mode);
+                    return formatEditor(e.editor, e.mode);
             });
             
             prefs.add({
@@ -110,7 +110,7 @@ define(function(require, exports, module) {
         
         /***** Methods *****/
         
-        function formatCode(editor, mode) {
+        function formatEditor(editor, mode) {
             if (this.disabled === true)
                 return;
     
@@ -120,21 +120,8 @@ define(function(require, exports, module) {
             var range = sel.getRange();
     
             // Load up current settings data
-            var options = {
-                space_before_conditional: settings.getBool("user/format/jsbeautify/@space_before_conditional"),
-                keep_array_indentation: settings.getBool("user/format/jsbeautify/@keeparrayindentation"),
-                preserve_newlines: settings.getBool("user/format/jsbeautify/@preserveempty"),
-                unescape_strings: settings.getBool("user/format/jsbeautify/@unescape_strings"),
-                jslint_happy: settings.getBool("user/format/jsbeautify/@jslinthappy"),
-                brace_style: settings.get("user/format/jsbeautify/@braces"),
-                indent_inner_html: settings.get("user/format/jsbeautify/@indent_inner_html"),
-                e4x: true
-            };
+            var options = getOptions(null, true);
             
-            var json = settings.get("user/format/jsbeautify/@advanced");
-            if (json && typeof json == "object")
-                util.extend(options, json);
-    
             if (session.getUseSoftTabs()) {
                 options.indent_char = " ";
                 options.indent_size = session.getTabSize();
@@ -153,6 +140,71 @@ define(function(require, exports, module) {
                 trim = true;
     
             var value = session.getTextRange(range);
+            var type = getType(mode, value, options);
+    
+            try {
+                value = jsbeautify[type + "_beautify"](value, options);
+                if (trim)
+                    value = value.replace(/^/gm, indent).trim();
+                if (range.end.column === 0)
+                    value += "\n" + indent;
+            }
+            catch (e) {
+                return false;
+            }
+    
+            var end = session.diffAndReplace(range, value);
+            sel.setSelectionRange(Range.fromPoints(range.start, end));
+            
+            return true;
+        }
+        
+        function formatString(mode, value, options){
+            options = getOptions(options);
+            var type = getType(mode, value, options);
+            return jsbeautify[type + "_beautify"](value, options);
+        }
+        
+        function getOptions(options, allowAdvanced){
+            if (!options) options = {};
+            
+            if (!options.hasOwnProperty("space_before_conditional"))
+                options.space_before_conditional = 
+                    settings.getBool("user/format/jsbeautify/@space_before_conditional");
+            if (!options.hasOwnProperty("keep_array_indentation"))
+                options.keep_array_indentation = 
+                    settings.getBool("user/format/jsbeautify/@keeparrayindentation");
+            if (!options.hasOwnProperty("preserve_newlines"))
+                options.preserve_newlines = 
+                    settings.getBool("user/format/jsbeautify/@preserveempty");
+            if (!options.hasOwnProperty("unescape_strings"))
+                options.unescape_strings = 
+                    settings.getBool("user/format/jsbeautify/@unescape_strings");
+            if (!options.hasOwnProperty("jslint_happy"))
+                options.jslint_happy = 
+                    settings.getBool("user/format/jsbeautify/@jslinthappy");
+            if (!options.hasOwnProperty("brace_style"))
+                options.brace_style = 
+                    settings.get("user/format/jsbeautify/@braces");
+            if (!options.hasOwnProperty("indent_inner_html"))
+                options.indent_inner_html = 
+                    settings.get("user/format/jsbeautify/@indent_inner_html");
+            if (!options.hasOwnProperty("e4x"))
+                options.e4x = true;
+            
+            if (allowAdvanced) {
+                var json = settings.get("user/format/jsbeautify/@advanced");
+                if (json && typeof json == "object")
+                    util.extend(options, json);
+            }
+            
+            if (!options.indent_char)
+                options.indent_char = " ";
+            if (!options.indent_size)
+                options.indent_size = 4;
+        }
+        
+        function getType(mode, value, options){
             var type = null;
     
             if (mode == "javascript" || mode == "json" || mode == "jsx") {
@@ -171,25 +223,11 @@ define(function(require, exports, module) {
                 else
                     type = "js";
             } else if (mode == "handlebars") {
-                options.indent_handlebars = true;
+                if (options) options.indent_handlebars = true;
                 type = "html";
             }
-    
-            try {
-                value = jsbeautify[type + "_beautify"](value, options);
-                if (trim)
-                    value = value.replace(/^/gm, indent).trim();
-                if (range.end.column === 0)
-                    value += "\n" + indent;
-            }
-            catch (e) {
-                return false;
-            }
-    
-            var end = session.diffAndReplace(range, value);
-            sel.setSelectionRange(Range.fromPoints(range.start, end));
             
-            return true;
+            return type;
         }
         
         /***** Lifecycle *****/
@@ -219,7 +257,12 @@ define(function(require, exports, module) {
             /**
              * 
              */
-            formatCode: formatCode
+            formatEditor: formatEditor,
+            
+            /**
+             * 
+             */
+            formatString: formatString
         });
         
         register(null, {

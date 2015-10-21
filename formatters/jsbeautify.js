@@ -202,6 +202,8 @@ define(function(require, exports, module) {
                 options.indent_char = " ";
             if (!options.indent_size)
                 options.indent_size = 4;
+                
+            return options;
         }
         
         function getType(mode, value, options){

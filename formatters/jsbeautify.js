@@ -54,7 +54,7 @@ define(function(require, exports, module) {
             
             format.on("format", function(e) {
                 if (MODES[e.mode])
-                    return formatEditor(e.editor, e.mode);
+                    return formatEditor(e.editor, e.mode, e.all);
             });
             
             prefs.add({
@@ -110,7 +110,7 @@ define(function(require, exports, module) {
         
         /***** Methods *****/
         
-        function formatEditor(editor, mode) {
+        function formatEditor(editor, mode, all) {
             if (this.disabled === true)
                 return;
     
@@ -118,7 +118,13 @@ define(function(require, exports, module) {
             var sel = ace.selection;
             var session = ace.session;
             var range = sel.getRange();
-    
+            var keepSelection = false;
+            
+            if (range.isEmpty() || all) {
+                range = new Range(0, 0, session.getLength(), 0);
+                keepSelection = true;
+            }
+            
             // Load up current settings data
             var options = getOptions(null, true);
             
@@ -154,18 +160,19 @@ define(function(require, exports, module) {
             }
     
             var end = session.diffAndReplace(range, value);
-            sel.setSelectionRange(Range.fromPoints(range.start, end));
+            if (!keepSelection)
+                sel.setSelectionRange(Range.fromPoints(range.start, end));
             
             return true;
         }
         
-        function formatString(mode, value, options){
+        function formatString(mode, value, options) {
             options = getOptions(options);
             var type = getType(mode, value, options);
             return jsbeautify[type + "_beautify"](value, options);
         }
         
-        function getOptions(options, allowAdvanced){
+        function getOptions(options, allowAdvanced) {
             if (!options) options = {};
             
             if (!options.hasOwnProperty("space_before_conditional"))
@@ -206,7 +213,7 @@ define(function(require, exports, module) {
             return options;
         }
         
-        function getType(mode, value, options){
+        function getType(mode, value, options) {
             var type = null;
     
             if (mode == "javascript" || mode == "json" || mode == "jsx") {

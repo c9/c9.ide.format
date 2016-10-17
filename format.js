@@ -62,16 +62,13 @@ define(function(require, exports, module) {
             if (!editor)
                 editor = tabManager.focussedTab.editor;
             
-            if (!mode || mode == "auto")
+            if (!mode || mode === "auto")
                 mode = getMode(editor);
             
-            var range = editor.ace.selection.getRange();
-            if (all || range.start.row === range.end.row
-                && range.start.column === range.end.column) {
-                editor.ace.selection.selectAll();
-            }
+            if (editor.ace.selection.isEmpty())
+                all = true;
             
-            if (!emit("format", { mode: mode, editor: editor })) {
+            if (!emit("format", { mode: mode, editor: editor, all: all })) {
                 alert("Error",
                     "This code could not be beautified",
                     '"' + mode + "\" is not supported yet");

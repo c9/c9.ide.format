@@ -1,6 +1,6 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "Plugin", "format", "settings", "preferences", "util"
+        "Plugin", "format", "settings", "preferences", "util", "save"
     ];
     main.provides = ["format.jsbeautify"];
     return main;
@@ -11,14 +11,10 @@ define(function(require, exports, module) {
         var Plugin = imports.Plugin;
         var format = imports.format;
         var settings = imports.settings;
-        
+        var save = imports.save;
         var Range = require("ace/range").Range;
         var jsbeautify = require("./lib_jsbeautify");
-        
-        /***** Initialization *****/
-        
         var plugin = new Plugin("Ajax.org", main.consumes);
-        // var emit = plugin.getEmitter();
         
         var MODES = {
             "javascript" : "Javascript (JS Beautify)",
@@ -41,6 +37,7 @@ define(function(require, exports, module) {
             
             settings.on("read", function(){
                 settings.setDefaults("project/format/jsbeautify", [
+                    ["autoformat", "false"],
                     ["preserveempty", "true"],
                     ["keeparrayindentation", "false"],
                     ["jslinthappy", "false"],
@@ -60,16 +57,15 @@ define(function(require, exports, module) {
             prefs.add({
                 "Project": {
                     "Code Formatters": {
-                        position: 1000,
-                        "hint": {
-                            position: 100,
-                            type: "label",
-                            caption: '<p class="hint">Hint: configure the code formatter used in the Language Support settings above!</p>',
-                        },
                         "JS Beautify": {
                             position: 110,
                             type: "label",
                             caption: "JS Beautify:",
+                        },
+                        "Format Code on Save": {
+                            position: 111,
+                            type: "checkbox",
+                            path: "project/format/jsbeautify/@autoformat",
                         },
                         "Preserve Empty Lines": {
                             type: "checkbox",
@@ -114,6 +110,12 @@ define(function(require, exports, module) {
                         }
                     }
                 }
+            }, plugin);
+                
+            save.on("beforeSave", function(e) {
+                if (!settings.getBool("project/format/jsbeautify/@autoformat"))
+                    return;
+                format.formatCode(null, e.editor);
             }, plugin);
         }
         

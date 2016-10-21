@@ -1,6 +1,6 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "Plugin", "ui", "commands", "menus", "tabManager", "dialog.alert"
+        "Plugin", "ui", "commands", "menus", "tabManager", "dialog.alert", "preferences"
     ];
     main.provides = ["format"];
     return main;
@@ -12,6 +12,7 @@ define(function(require, exports, module) {
         var tabManager = imports.tabManager;
         var menus = imports.menus;
         var alert = imports["dialog.alert"].show;
+        var prefs = imports.preferences;
         
         /***** Initialization *****/
         
@@ -33,6 +34,19 @@ define(function(require, exports, module) {
                 bindKey: { mac: "Command-Shift-B", win: "Ctrl-Shift-B" },
                 exec: function(editor, args) {
                     formatCode(args.mode, editor, args.all);
+                }
+            }, plugin);
+            
+            prefs.add({
+                "Project": {
+                    "Code Formatters": {
+                        position: 1000,
+                        "hint": {
+                            position: 100,
+                            type: "label",
+                            caption: '<p class="hint">Hint: configure the code formatter used in the Language Support settings above!</p>',
+                        },
+                    }
                 }
             }, plugin);
             

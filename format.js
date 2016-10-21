@@ -1,7 +1,6 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "Plugin", "ui", "commands", "menus", "tabManager", "dialog.alert", "preferences",
-        "preferences.project"
+        "Plugin", "ui", "commands", "menus", "tabManager", "dialog.alert", "preferences"
     ];
     main.provides = ["format"];
     return main;
@@ -14,7 +13,6 @@ define(function(require, exports, module) {
         var menus = imports.menus;
         var alert = imports["dialog.alert"].show;
         var prefs = imports.preferences;
-        var projectPrefs = imports["preferences.project"];
         
         /***** Initialization *****/
         
@@ -43,9 +41,8 @@ define(function(require, exports, module) {
                 name: "formatprefs",
                 hint: "open language & formatting preferences",
                 exec: function(editor, args) {
-                    debugger;
                     commands.exec("openpreferences", null, {
-                        panel: projectPrefs,
+                        panel: "preferences.project",
                         section: "Language Support"
                     });
                 }

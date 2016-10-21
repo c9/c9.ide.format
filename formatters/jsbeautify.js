@@ -40,7 +40,7 @@ define(function(require, exports, module) {
             });
             
             settings.on("read", function(){
-                settings.setDefaults("user/format/jsbeautify", [
+                settings.setDefaults("project/format/jsbeautify", [
                     ["preserveempty", "true"],
                     ["keeparrayindentation", "false"],
                     ["jslinthappy", "false"],
@@ -58,30 +58,39 @@ define(function(require, exports, module) {
             });
             
             prefs.add({
-                "Formatters" : {
-                    position: 450,
-                    "JS Beautify" : {
-                        position: 100,
+                "Project": {
+                    "Code Formatters": {
+                        position: 1000,
+                        "hint": {
+                            position: 100,
+                            type: "label",
+                            caption: '<p class="hint">Hint: configure the code formatter used in the Language Support settings above!</p>',
+                        },
+                        "JS Beautify": {
+                            position: 110,
+                            type: "label",
+                            caption: "JS Beautify:",
+                        },
                         "Preserve Empty Lines": {
                             type: "checkbox",
-                            path: "user/format/jsbeautify/@preserveempty",
-                            position: 1000
+                            path: "project/format/jsbeautify/@preserveempty",
+                            position: 120,
                         },
                         "Keep Array Indentation": {
                             type: "checkbox",
-                            path: "user/format/jsbeautify/@keeparrayindentation",
-                            position: 2000
+                            path: "project/format/jsbeautify/@keeparrayindentation",
+                            position: 130,
                         },
                         "JSLint Strict Whitespace": {
                             type: "checkbox",
-                            path: "user/format/jsbeautify/@jslinthappy",
-                            position: 3000
+                            path: "project/format/jsbeautify/@jslinthappy",
+                            position: 140,
                         },
                         "Braces": {
                             type: "dropdown",
-                            path: "user/format/jsbeautify/@braces",
+                            path: "project/format/jsbeautify/@braces",
                             width: "185",
-                            position: 4000,
+                            position: 150,
                             items: [
                                 { value: "collapse", caption: "Braces with control statement" },
                                 { value: "expand", caption: "Braces on own line" },
@@ -90,18 +99,18 @@ define(function(require, exports, module) {
                         },
                         "Space Before Conditionals": {
                             type: "checkbox",
-                            path: "user/format/jsbeautify/@space_before_conditional",
-                            position: 5000
+                            path: "project/format/jsbeautify/@space_before_conditional",
+                            position: 160,
                         },
                         "Unescape Strings": {
                             type: "checkbox",
-                            path: "user/format/jsbeautify/@unescape_strings",
-                            position: 6000
+                            path: "project/format/jsbeautify/@unescape_strings",
+                            position: 170,
                         },
                         "Indent Inner Html": {
                             type: "checkbox",
-                            path: "user/format/jsbeautify/@indent_inner_html",
-                            position: 6000
+                            path: "project/format/jsbeautify/@indent_inner_html",
+                            position: 180,
                         }
                     }
                 }

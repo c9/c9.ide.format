@@ -31,10 +31,6 @@ define(function(require, exports, module) {
             if (loaded) return false;
             loaded = true;
             
-            Object.keys(MODES).forEach(function(name) {
-                format.addFormatter(MODES[name], name, plugin);
-            });
-            
             settings.on("read", function(){
                 settings.setDefaults("project/format/jsbeautify", [
                     ["autoformat", "false"],
@@ -130,6 +126,8 @@ define(function(require, exports, module) {
         
         function formatEditor(editor, mode, all) {
             if (this.disabled === true)
+                return;
+            if (mode === "javascript" && settings.getBool("project/format/@javascript_enabled"))
                 return;
     
             var ace = editor.ace;
@@ -289,7 +287,15 @@ define(function(require, exports, module) {
             /**
              * 
              */
-            formatString: formatString
+            formatString: formatString,
+            
+            setAutoFormatting: function(value) {
+                settings.set("project/format/@javascript_enabled", true);
+            },
+            
+            getAutoFormatting: function() {
+                return settings.getBool("project/format/@javascript_enabled");
+            }
         });
         
         register(null, {

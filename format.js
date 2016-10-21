@@ -1,6 +1,7 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "Plugin", "ui", "commands", "menus", "tabManager", "dialog.alert", "preferences"
+        "Plugin", "ui", "commands", "menus", "tabManager", "dialog.alert", "preferences",
+        "preferences.project"
     ];
     main.provides = ["format"];
     return main;
@@ -13,13 +14,14 @@ define(function(require, exports, module) {
         var menus = imports.menus;
         var alert = imports["dialog.alert"].show;
         var prefs = imports.preferences;
+        var projectPrefs = imports["preferences.project"];
         
         /***** Initialization *****/
         
         var plugin = new Plugin("Ajax.org", main.consumes);
         var emit = plugin.getEmitter();
         
-        var count = 200;
+        var count = 300;
         var mnuFormat;
         
         var loaded = false;
@@ -34,6 +36,18 @@ define(function(require, exports, module) {
                 bindKey: { mac: "Command-Shift-B", win: "Ctrl-Shift-B" },
                 exec: function(editor, args) {
                     formatCode(args.mode, editor, args.all);
+                }
+            }, plugin);
+            
+            commands.addCommand({
+                name: "formatprefs",
+                hint: "open language & formatting preferences",
+                exec: function(editor, args) {
+                    debugger;
+                    commands.exec("openpreferences", null, {
+                        panel: projectPrefs,
+                        section: "Language Support"
+                    });
                 }
             }, plugin);
             
@@ -58,12 +72,17 @@ define(function(require, exports, module) {
             });
             menus.addItemByPath("Edit/Code Formatting", mnuFormat, 1400, plugin);
             
-            menus.addItemByPath("Edit/Code Formatting/Auto Selected Formatter", new ui.item({
+            menus.addItemByPath("Edit/Code Formatting/Apply Code Formatting", new ui.item({
                 selected: true,
                 value: "auto",
                 command: "formatcode"
             }), 100, plugin);
-            menus.addItemByPath("Edit/Code Formatting/~", new ui.divider(), 200, plugin);
+            
+            menus.addItemByPath("Edit/Code Formatting/Open Language & Formatting Preferences...", new ui.item({
+                selected: true,
+                value: "auto",
+                command: "formatprefs"
+            }), 200, plugin);
         }
         
         /***** Methods *****/
@@ -90,6 +109,8 @@ define(function(require, exports, module) {
         }
         
         function addFormatter(caption, mode, plugin) {
+            if (count === 300)
+                menus.addItemByPath("Edit/Code Formatting/~", new ui.divider(), 300, plugin);
             menus.addItemByPath("Edit/Code Formatting/" + caption, new ui.item({
                 value: mode,
                 isAvailable: commands.commands.formatcode.isAvailable

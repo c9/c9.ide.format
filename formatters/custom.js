@@ -1,27 +1,38 @@
 define(function(require, exports, module) {
     main.consumes = [
-        "Plugin", "settings", "preferences", "save", "collab", "tabManager", "dialog.error"
+        "Plugin", "settings", "save", "collab", "tabManager", "dialog.error", "format"
     ];
     main.provides = ["format.custom"];
     return main;
 
     function main(options, imports, register) {
         var settings = imports.settings;
-        var prefs = imports.preferences;
         var tabs = imports.tabManager;
+        var save = imports.save;
+        var format = imports.format;
         var collab = imports.collab;
         var showError = imports["dialog.error"].show;
         var Plugin = imports.Plugin;
         var plugin = new Plugin("Ajax.org", main.consumes);
         
+        var ERROR_NOT_FOUND = 127;
+        
         function load() {
             collab.on("beforeSave", beforeSave, plugin);
             collab.on("postProcessorError", function(e) {
                 var mode = getMode(e.docId) || "language";
-                if (e.code !== 8)
+                if (e.code !== ERROR_NOT_FOUND)
                     return console.error("Error running formatter for " + mode + ": " + (e.stderr || e.code));
                 showError("Error running code formatter for " + mode + ": formatter not found, please check your project settings");
             });
+            format.on("format", function(e) {
+                if (!settings.get("project/format/@" + e.mode + "_formatter"))
+                    return;
+                if (e.mode === "javascript" && !settings.getBool("project/format/@javascript_enabled"))
+                    return; // use built-in JS Beautify instead
+                save.save(tabs.currentTab);
+                return true;
+            }, plugin);
         }
         
         function beforeSave(e) {

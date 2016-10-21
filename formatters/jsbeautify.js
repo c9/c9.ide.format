@@ -115,7 +115,9 @@ define(function(require, exports, module) {
             save.on("beforeSave", function(e) {
                 if (!settings.getBool("project/format/jsbeautify/@autoformat"))
                     return;
-                format.formatCode(null, e.editor);
+                if (!e.tab.editor && !e.tab.editor.ace || !MODES[e.tab.editor.ace.session.syntax])
+                    return;
+                format.formatCode(null, e.tab.editor);
             }, plugin);
         }
         

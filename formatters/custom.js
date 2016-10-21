@@ -16,13 +16,16 @@ define(function(require, exports, module) {
         
         function load() {
             collab.on("beforeSave", beforeSave, plugin);
+            collab.on("postProcessorError", function(e) {
+                var mode = getMode(e.docId) || "language";
+                if (e.code !== 8)
+                    return console.error("Error running formatter for " + mode + ": " + (e.stderr || e.code));
+                showError("Error running code formatter for " + mode + ": formatter not found, please check your project settings");
+            });
         }
         
         function beforeSave(e) {
-            var tab = tabs.findTab(e.docId);
-            if (!tab || !tab.editor || !tab.editor.ace)
-                return;
-            var mode = tab.editor.ace.session.syntax;
+            var mode = getMode(e.docId);
             var enabled = settings.getBool("project/format/@" + mode + "_enabled");
             if (!enabled)
                 return;
@@ -33,6 +36,13 @@ define(function(require, exports, module) {
                 command: "bash",
                 args: ["-c", formatter]
             };
+        }
+        
+        function getMode(docId) {
+            var tab = tabs.findTab(docId);
+            if (!tab || !tab.editor || !tab.editor.ace)
+                return;
+            return tab.editor.ace.session.syntax;
         }
         
         plugin.on("load", function() {

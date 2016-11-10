@@ -21,6 +21,7 @@ define(function(require, exports, module) {
             "html"       : "HTML (JS Beautify)",
             "css"        : "CSS (JS Beautify)",
             "less"       : "Less (JS Beautify)",
+            "scss"       : "SASS (JS Beautify)",
             "xml"        : "XML (JS Beautify)",
             "json"       : "JSON (JS Beautify)",
             "handlebars" : "Handlebars (JS Beautify)",
@@ -234,7 +235,7 @@ define(function(require, exports, module) {
     
             if (mode == "javascript" || mode == "json" || mode == "jsx") {
                 type = "js";
-            } else if (mode == "css" || mode == "less"){
+            } else if (mode == "css" || mode == "less" || mode == "scss"){
                 type = "css";
             } else if (/^\s*<!?\w/.test(value)) {
                 type = "html";

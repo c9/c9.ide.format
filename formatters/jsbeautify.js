@@ -65,6 +65,10 @@ define(function(require, exports, module) {
                             position: 320,
                             type: "checkbox",
                             path: "project/format/jsbeautify/@formatOnSave",
+                            onchange: function(e) {
+                                if (e.value && settings.get("project/javascript/@formatter", ""))
+                                    settings.set("project/javascript/@jsbeautify", true);
+                            }
                         },
                         "Use JSBeautify for JavaScript": {
                             position: 340,

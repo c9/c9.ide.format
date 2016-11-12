@@ -43,21 +43,8 @@ define(function(require, exports, module) {
                 exec: function(editor, args) {
                     commands.exec("openpreferences", null, {
                         panel: "preferences.project",
-                        section: "Language Support"
+                        section: "JavaScript Support"
                     });
-                }
-            }, plugin);
-            
-            prefs.add({
-                "Project": {
-                    "Code Formatters": {
-                        position: 1000,
-                        "hint": {
-                            position: 100,
-                            type: "label",
-                            caption: '<p class="hint">Hint: configure the code formatter used in the Language Support settings above!</p>',
-                        },
-                    }
                 }
             }, plugin);
             

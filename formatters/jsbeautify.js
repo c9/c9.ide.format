@@ -32,9 +32,11 @@ define(function(require, exports, module) {
             if (loaded) return false;
             loaded = true;
             
-            settings.on("read", function(){
+            settings.on("read", function() {
+                settings.setDefaults("project/javascript", [
+                    ["jsbeautify", "false"],
+                ]);
                 settings.setDefaults("project/format/jsbeautify", [
-                    ["autoformat", "false"],
                     ["preserveempty", "true"],
                     ["keeparrayindentation", "false"],
                     ["jslinthappy", "false"],
@@ -54,36 +56,46 @@ define(function(require, exports, module) {
             prefs.add({
                 "Project": {
                     "Code Formatters": {
-                        "JS Beautify": {
-                            position: 110,
+                        position: 900,
+                        "JSBeautify": {
                             type: "label",
-                            caption: "JS Beautify:",
+                            caption: "JSBeautify settings:",
                         },
                         "Format Code on Save": {
-                            position: 111,
+                            position: 320,
                             type: "checkbox",
-                            path: "project/format/jsbeautify/@autoformat",
+                            path: "project/format/jsbeautify/@formatOnSave",
+                        },
+                        "Use JSBeautify for JavaScript": {
+                            position: 340,
+                            type: "checkbox",
+                            path: "project/javascript/@jsbeautify",
+                            onchange: function(e) {
+                                if (e.value)
+                                    settings.set("project/javascript/@formatter", "");
+                            }
                         },
                         "Preserve Empty Lines": {
                             type: "checkbox",
                             path: "project/format/jsbeautify/@preserveempty",
-                            position: 120,
+                            position: 350,
                         },
                         "Keep Array Indentation": {
                             type: "checkbox",
                             path: "project/format/jsbeautify/@keeparrayindentation",
-                            position: 130,
+                            position: 351,
                         },
                         "JSLint Strict Whitespace": {
                             type: "checkbox",
+                            
                             path: "project/format/jsbeautify/@jslinthappy",
-                            position: 140,
+                            position: 352,
                         },
                         "Braces": {
                             type: "dropdown",
                             path: "project/format/jsbeautify/@braces",
                             width: "185",
-                            position: 150,
+                            position: 353,
                             items: [
                                 { value: "collapse", caption: "Braces with control statement" },
                                 { value: "expand", caption: "Braces on own line" },
@@ -93,31 +105,45 @@ define(function(require, exports, module) {
                         "Space Before Conditionals": {
                             type: "checkbox",
                             path: "project/format/jsbeautify/@space_before_conditional",
-                            position: 160,
+                            position: 354,
                         },
                         "Unescape Strings": {
                             type: "checkbox",
                             path: "project/format/jsbeautify/@unescape_strings",
-                            position: 170,
+                            position: 355,
                         },
                         "Indent Inner Html": {
                             type: "checkbox",
                             path: "project/format/jsbeautify/@indent_inner_html",
-                            position: 180,
+                            position: 356,
                         }
+                    },
+                    "JavaScript Support": {
+                        position: 1100,
+                        "Use Built-in JSBeautify as Code Formatter": {
+                            position: 320,
+                            type: "checkbox",
+                            path: "project/javascript/@jsbeautify",
+                            onchange: function(e) {
+                                if (e.value)
+                                    settings.set("project/javascript/@formatter", "");
+                            }
+                        },
                     }
                 }
             }, plugin);
                 
             save.on("beforeSave", function(e) {
-                if (!settings.getBool("project/format/jsbeautify/@autoformat"))
-                    return;
                 if (!e.tab.editor && !e.tab.editor.ace)
                     return;
                 var mode = e.tab.editor.ace.session.syntax;
-                if (mode === "javascript" && settings.getBool("project/format/@javascript_enabled"))
-                    return;
                 if (!e.tab.editor && !e.tab.editor.ace || !MODES[mode])
+                    return;
+                if (mode === "javascript" && !settings.getBool("project/javascript/@formatOnSave") && !settings.getBool("project/format/jsbeautify/@formatOnSave"))
+                    return;
+                if (mode === "javascript" && !settings.getBool("project/javascript/@jsbeautify"))
+                    return;
+                if (mode !== "javascript" && !settings.getBool("project/format/jsbeautify/@formatOnSave"))
                     return;
                 format.formatCode(null, e.tab.editor);
             }, plugin);
@@ -128,7 +154,7 @@ define(function(require, exports, module) {
         function formatEditor(editor, mode, all) {
             if (this.disabled === true)
                 return;
-            if (mode === "javascript" && settings.getBool("project/format/@javascript_enabled"))
+            if (mode === "javascript" && !settings.getBool("project/javascript/@jsbeautify"))
                 return;
     
             var ace = editor.ace;
@@ -289,14 +315,6 @@ define(function(require, exports, module) {
              * 
              */
             formatString: formatString,
-            
-            setAutoFormatting: function(value) {
-                settings.set("project/format/@javascript_enabled", true);
-            },
-            
-            getAutoFormatting: function() {
-                return settings.getBool("project/format/@javascript_enabled");
-            }
         });
         
         register(null, {

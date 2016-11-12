@@ -26,9 +26,9 @@ define(function(require, exports, module) {
                 showError("Error running code formatter for " + mode + ": formatter not found, please check your project settings");
             });
             format.on("format", function(e) {
-                if (!settings.get("project/format/@" + e.mode + "_formatter"))
+                if (!settings.get("project/" + e.mode + "/@formatOnSave"))
                     return;
-                if (e.mode === "javascript" && !settings.getBool("project/format/@javascript_enabled"))
+                if (e.mode === "javascript" && settings.getBool("project/javascript/@jsbeautify"))
                     return; // use built-in JS Beautify instead
                 save.save(tabs.currentTab);
                 return true;
@@ -37,10 +37,12 @@ define(function(require, exports, module) {
         
         function beforeSave(e) {
             var mode = getMode(e.docId);
-            var enabled = settings.getBool("project/format/@" + mode + "_enabled");
+            var enabled = settings.getBool("project/" + mode + "/@formatOnSave");
             if (!enabled)
                 return;
-            var formatter = settings.get("project/format/@" + mode + "_formatter");
+            if (mode === "javascript" && settings.getBool("project/javascript/@jsbeautify"))
+                return; // use built-in JS Beautify instead
+            var formatter = settings.get("project/" + mode + "/@formatter");
             if (!formatter)
                 return showError("No code formatter set for " + mode + ": please check your project settings");
             e.postProcessor = {

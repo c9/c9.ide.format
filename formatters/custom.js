@@ -23,7 +23,9 @@ define(function(require, exports, module) {
                 var mode = getMode(e.docId) || "language";
                 if (e.code !== ERROR_NOT_FOUND)
                     return console.error("Error running formatter for " + mode + ": " + (e.stderr || e.code));
-                showError("Error running code formatter for " + mode + ": formatter not found, please check your project settings");
+                var formatter = (settings.get("project/" + mode + "/@formatter") || "formatter").replace(/(.*?) .*/, "$1");
+                showError("Error running code formatter for " + mode + ": "
+                    + formatter + " not found, please check your project settings");
             });
             format.on("format", function(e) {
                 if (!settings.get("project/" + e.mode + "/@formatOnSave"))

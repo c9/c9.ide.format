@@ -34,7 +34,7 @@ define(function(require, exports, module) {
             
             settings.on("read", function() {
                 settings.setDefaults("project/javascript", [
-                    ["jsbeautify", "false"],
+                    ["use_jsbeautify", "true"],
                 ]);
                 settings.setDefaults("project/format/jsbeautify", [
                     ["preserveempty", "true"],
@@ -67,13 +67,13 @@ define(function(require, exports, module) {
                             path: "project/format/jsbeautify/@formatOnSave",
                             onchange: function(e) {
                                 if (e.value && settings.get("project/javascript/@formatter", ""))
-                                    settings.set("project/javascript/@jsbeautify", true);
+                                    settings.set("project/javascript/@use_jsbeautify", true);
                             }
                         },
                         "Use JSBeautify for JavaScript": {
                             position: 340,
                             type: "checkbox",
-                            path: "project/javascript/@jsbeautify",
+                            path: "project/javascript/@use_jsbeautify",
                             onchange: function(e) {
                                 if (e.value)
                                     settings.set("project/javascript/@formatter", "");
@@ -127,7 +127,7 @@ define(function(require, exports, module) {
                         "Use Built-in JSBeautify as Code Formatter": {
                             position: 320,
                             type: "checkbox",
-                            path: "project/javascript/@jsbeautify",
+                            path: "project/javascript/@use_jsbeautify",
                             onchange: function(e) {
                                 if (e.value)
                                     settings.set("project/javascript/@formatter", "");
@@ -145,7 +145,7 @@ define(function(require, exports, module) {
                     return;
                 if (mode === "javascript" && !settings.getBool("project/javascript/@formatOnSave") && !settings.getBool("project/format/jsbeautify/@formatOnSave"))
                     return;
-                if (mode === "javascript" && !settings.getBool("project/javascript/@jsbeautify"))
+                if (mode === "javascript" && !settings.getBool("project/javascript/@use_jsbeautify"))
                     return;
                 if (mode !== "javascript" && !settings.getBool("project/format/jsbeautify/@formatOnSave"))
                     return;
@@ -158,7 +158,7 @@ define(function(require, exports, module) {
         function formatEditor(editor, mode, all) {
             if (this.disabled === true)
                 return;
-            if (mode === "javascript" && !settings.getBool("project/javascript/@jsbeautify"))
+            if (mode === "javascript" && !settings.getBool("project/javascript/@use_jsbeautify"))
                 return;
     
             var ace = editor.ace;

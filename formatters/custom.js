@@ -30,7 +30,7 @@ define(function(require, exports, module) {
             format.on("format", function(e) {
                 if (!settings.get("project/" + e.mode + "/@formatOnSave"))
                     return;
-                if (e.mode === "javascript" && settings.getBool("project/javascript/@jsbeautify"))
+                if (e.mode === "javascript" && settings.getBool("project/javascript/@use_jsbeautify"))
                     return; // use built-in JS Beautify instead
                 save.save(tabs.currentTab);
                 return true;
@@ -42,7 +42,7 @@ define(function(require, exports, module) {
             var enabled = settings.getBool("project/" + mode + "/@formatOnSave");
             if (!enabled)
                 return;
-            if (mode === "javascript" && settings.getBool("project/javascript/@jsbeautify"))
+            if (mode === "javascript" && settings.getBool("project/javascript/@use_jsbeautify"))
                 return; // use built-in JS Beautify instead
             var formatter = settings.get("project/" + mode + "/@formatter");
             if (!formatter)

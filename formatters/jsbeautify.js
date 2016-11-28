@@ -138,7 +138,7 @@ define(function(require, exports, module) {
             }, plugin);
                 
             save.on("beforeSave", function(e) {
-                if (!e.tab.editor && !e.tab.editor.ace)
+                if (!e.tab.editor || !e.tab.editor.ace || !e.tab.path)
                     return;
                 var mode = e.tab.editor.ace.session.syntax;
                 if (!e.tab.editor && !e.tab.editor.ace || !MODES[mode])

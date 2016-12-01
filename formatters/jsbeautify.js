@@ -224,30 +224,30 @@ define(function(require, exports, module) {
             
             if (!options.hasOwnProperty("space_before_conditional"))
                 options.space_before_conditional = 
-                    settings.getBool("user/format/jsbeautify/@space_before_conditional");
+                    settings.getBool("project/format/jsbeautify/@space_before_conditional");
             if (!options.hasOwnProperty("keep_array_indentation"))
                 options.keep_array_indentation = 
-                    settings.getBool("user/format/jsbeautify/@keeparrayindentation");
+                    settings.getBool("project/format/jsbeautify/@keeparrayindentation");
             if (!options.hasOwnProperty("preserve_newlines"))
                 options.preserve_newlines = 
-                    settings.getBool("user/format/jsbeautify/@preserveempty");
+                    settings.getBool("project/format/jsbeautify/@preserveempty");
             if (!options.hasOwnProperty("unescape_strings"))
                 options.unescape_strings = 
-                    settings.getBool("user/format/jsbeautify/@unescape_strings");
+                    settings.getBool("project/format/jsbeautify/@unescape_strings");
             if (!options.hasOwnProperty("jslint_happy"))
                 options.jslint_happy = 
-                    settings.getBool("user/format/jsbeautify/@jslinthappy");
+                    settings.getBool("project/format/jsbeautify/@jslinthappy");
             if (!options.hasOwnProperty("brace_style"))
                 options.brace_style = 
-                    settings.get("user/format/jsbeautify/@braces");
+                    settings.get("project/format/jsbeautify/@braces");
             if (!options.hasOwnProperty("indent_inner_html"))
                 options.indent_inner_html = 
-                    settings.get("user/format/jsbeautify/@indent_inner_html");
+                    settings.get("project/format/jsbeautify/@indent_inner_html");
             if (!options.hasOwnProperty("e4x"))
                 options.e4x = true;
             
             if (allowAdvanced) {
-                var json = settings.get("user/format/jsbeautify/@advanced");
+                var json = settings.get("project/format/jsbeautify/@advanced");
                 if (json && typeof json == "object")
                     util.extend(options, json);
             }

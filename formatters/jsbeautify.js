@@ -26,7 +26,7 @@ define(function(require, exports, module) {
             "less": true,
             "scss": true,
             "xml": true,
-            "json: true,
+            "json": true,
             "handlebars": true,
         };
         

@@ -22,7 +22,7 @@ define(function(require, exports, module) {
             "xhtml": true,
             "plugins/salesforce.language/modes/visualforce": true,
             "plugins/salesforce.language/modes/lightning": true,
-            "css: true,
+            "css": true,
             "less": true,
             "scss": true,
             "xml": true,

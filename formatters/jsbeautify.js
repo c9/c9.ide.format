@@ -274,7 +274,9 @@ define(function(require, exports, module) {
                 type = "html";
             } else if (mode == "xml") {
                 type = "html";
-            } else if (mode == "html") {
+            } else if (mode == "html" || mode == "xhtml"
+                       || mode === "plugins/salesforce.language/modes/visualforce"
+                       || mode === "plugins/salesforce.language/modes/lightning") {
                 if (/[^<]+?{[\s\-\w]+:[^}]+;/.test(value))
                     type = "css";
                 else if (/<\w+[ \/>]/.test(value))

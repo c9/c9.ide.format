@@ -17,14 +17,17 @@ define(function(require, exports, module) {
         var plugin = new Plugin("Ajax.org", main.consumes);
         
         var MODES = {
-            "javascript" : "Javascript (JS Beautify)",
-            "html"       : "HTML (JS Beautify)",
-            "css"        : "CSS (JS Beautify)",
-            "less"       : "Less (JS Beautify)",
-            "scss"       : "SASS (JS Beautify)",
-            "xml"        : "XML (JS Beautify)",
-            "json"       : "JSON (JS Beautify)",
-            "handlebars" : "Handlebars (JS Beautify)",
+            "javascript": true,
+            "html": true,
+            "xhtml": true,
+            "plugins/salesforce.language/modes/visualforce": true,
+            "plugins/salesforce.language/modes/lightning": true,
+            "css: true,
+            "less": true,
+            "scss": true,
+            "xml": true,
+            "json: true,
+            "handlebars": true,
         };
         
         var loaded = false;

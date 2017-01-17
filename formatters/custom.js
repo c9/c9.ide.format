@@ -18,6 +18,9 @@ define(function(require, exports, module) {
         var ERROR_NOT_FOUND = 127;
         
         function load() {
+            if (!options.collab) {
+                save.on("beforeSave", function() {}, plugin);
+            }
             collab.on("beforeSave", beforeSave, plugin);
             collab.on("postProcessorError", function(e) {
                 var mode = getMode(e.docId) || "language";

@@ -268,7 +268,7 @@ define(function(require, exports, module) {
     
             if (mode == "javascript" || mode == "json" || mode == "jsx") {
                 type = "js";
-            } else if (mode == "css" || mode == "less" || mode == "scss"){
+            } else if (mode == "css" || mode == "less" || mode == "scss") {
                 type = "css";
             } else if (/^\s*<!?\w/.test(value)) {
                 type = "html";
